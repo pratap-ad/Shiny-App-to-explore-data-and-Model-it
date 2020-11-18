@@ -46,7 +46,7 @@ shinyUI(
                         
                         column(width = 12,
                         box("Bar Plot", status = "primary", solidHeader = T,
-                            collapsible = T, plotOutput("bar"))),
+                            collapsible = T, plotlyOutput("bar"))),
                        
                         #box plot by team ID for seleceted year
                         box(selectInput("year", "Select the Year", 
