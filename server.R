@@ -1,5 +1,5 @@
-
-#
+# Project III, ST 558
+#Author: Pratap Adhikari
 
 library(shiny)
 library(tidyverse)
@@ -47,11 +47,11 @@ shinyServer(function(input, output, session) {
     
     
     #Histogram plot        
-    output$hist<- renderPlot({
-        ggplot(pv(), aes(x=pv()$W, ..density..)) +geom_histogram(bins=input$bins) + ylab("Density") + xlab("Wins") +
+    output$hist<- renderPlotly({
+        hist1<- ggplot(pv(), aes(x=pv()$W, ..density..)) +geom_histogram(bins=input$bins) + ylab("Density") + xlab("Wins") +
             geom_density(col="red", lwd=2, adjust=1)  
         
-        #hist( pv()$W, breaks = input$bins)
+        ggplotly(hist1)
     })
     
     #summary 
@@ -80,9 +80,10 @@ shinyServer(function(input, output, session) {
     
     
     #Bar plot of wins for team choosen
-    output$bar<- renderPlot({
-        ggplot(data=pv()%>% filter(yearID== as.numeric(input$year)) , aes(x= W)) + geom_bar(aes(fill=playerID) ) + 
+    output$bar<- renderPlotly({
+        bar1<- ggplot(data=pv()%>% filter(yearID== as.numeric(input$year)) , aes(x= W)) + geom_bar(aes(fill=playerID) ) + 
             scale_fill_discrete(name="Player ID") + xlab("Wins")
+        ggplotly(bar1)
     })
     
     #team bar plot 
@@ -114,7 +115,7 @@ shinyServer(function(input, output, session) {
     
     output$scat<- renderPlotly ({
         scp<-  ggplot(pv(), aes(x=W, y=G)) + geom_point(aes(color=teamID)) +
-            geom_smooth(method = 'lm', color='green') + ylab("Goals") + xlab("Wins")
+            geom_smooth(method = 'lm', color='green') + ylab("Games Played") + xlab("Wins")
         
         ggplotly(scp)
     })
@@ -367,7 +368,7 @@ shinyServer(function(input, output, session) {
     
     
     
-    # Downloadable csv of selected dataset ----
+    # Downloadable csv of selected dataset 
     output$downloadData <- downloadHandler(
         filename = function() {
             paste("Pitching", ".csv", sep = "")
