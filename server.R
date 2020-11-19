@@ -56,7 +56,7 @@ shinyServer(function(input, output, session) {
     
     #summary 
     output$summ<- renderPrint({
-        summary(mbl_pitching %>% filter(teamID==input$var)  %>%  select(W, L, ER, ERA, yearID))
+        summary(mbl_pitching %>% filter(teamID==input$var)  %>%  select(W, L, ER, ERA))
     })
     
     output$table<- renderDataTable({
