@@ -1,4 +1,5 @@
-
+# Project III, ST 558
+#Author: Pratap Adhikari
 
 library(shiny)
 library(shinydashboard)
@@ -32,16 +33,29 @@ shinyUI(
             tabItems(
                 tabItem(tabName = "dataexp",
                         fluidRow( h2("2. Data Exploration"),br(), br(),
+                                  
+                                  h4("  As we will be focusing on the the prediction of wins for any user
+                                  defined specific team which played for the year of 2015, the data exploration
+                                      will concentrate for that individual team. The data table for that team
+                                      shown for the demonstration purpose only, which can be dowloaded from the 
+                                      `Dataset` page. Therefore no download option is provided here. 
+                                      Please be 
+                                      informed that not all of the teams and years exist through out the years of data
+                                      available, it may return 0 observations and hence other summaries will not be produced."),
+                            br(), br(),
+                            
+                            h3("Select the team to generate the numerical and graphical summaries:"),
+                            
                             column(width = 6,
                                    box(selectInput("var", "Select the Team ID", 
                                                    selected = "ARI",
                                                    choices = levels(as.factor(mbl_pitching$teamID))),
                                        
-                                       sliderInput("bins", "Number of bins",
-                                                   min=1, max=50, value=10))),
+                                       sliderInput("bins", "Number of bins for histogram:",
+                                                   min=1, max=50, value=20))),
                             
-                            box("Histogram for wins, teamID= ", uiOutput("sumh") , status = "primary", solidHeader = T,
-                                collapsible = T, plotOutput("hist")),
+                            box("Histogram for wins ", uiOutput("sumh") , status = "primary", solidHeader = T,
+                                collapsible = T, plotlyOutput("hist")),
                             
                             box("Summary statistics for some of the attributes", verbatimTextOutput("summ")),
                             
@@ -62,7 +76,7 @@ shinyUI(
                             
                             column(width = 12,
                                    box("Bar Plot", status = "primary", solidHeader = T,
-                                       collapsible = T, plotOutput("bar"))),
+                                       collapsible = T, plotlyOutput("bar"))),
                             
                             
                             box("Scatter Plot", plotlyOutput("scat"))
@@ -272,16 +286,18 @@ shinyUI(
                            Lenear model to fit the model and predict the wins. Then choose the best one."),
                         
                        
+                        br(), br(), br(),
                         
-                        h5(" The Multiple Linear Regression Equation: ", br(), "Matrix Form:"), 
-                      
-            #Mathematical expression
-                       withMathJax(),
-                       helpText(' $${\\textbf{y}}= Xb + E$$ 
-
- and a fraction $$1-\\frac{1}{2}$$'),
                        
-                       helpText('$$\\sum$$ x')
+                       h4(" The Multiple Linear Regression Equation: ", br(), "Matrix Form:"), 
+                  #Mathematical expression
+                       withMathJax(),
+                       helpText(' $${\\textbf{y}}= Xb + E$$'), 
+
+ 
+                       
+                       h4("Scalar Form, Fitted values:"),
+            helpText(' $$\\hat{\\textbf{y}}i= \\hat{\\textbf{b}}o + \\sum \\hat{\\textbf{b}}j Xij $$'),
            
                                  
                         
