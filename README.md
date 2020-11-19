@@ -1,5 +1,9 @@
 # Project-III-ST-558
 
+## Creating a Shiny App
+#### The goal of this project is to create a shiny app that can be used to explore data and model it.
+#### I have used the `Pitching` data set of Major Baseball League (MBL).
+
 
 ### Packages needed to install and call the library
 ```{r}
@@ -18,7 +22,7 @@ library(plotly)
 ```
 
 
-### Code to run the repo from RStudio:
+### Code to run the repo from **RStudio:**
 ```{r
 shiny::runGitHub("Project-III-ST-558", "pratap-ad", ref = "main")
 
