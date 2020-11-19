@@ -12,7 +12,7 @@ library(plotly)
 
 #Load data
 mbl_pitching<- read.csv("Pitching.csv")
-
+predvar<-levels (as.factor( mbl_pitching %>% filter(yearID==2015) %>% select(teamID)))
 
 # Define UI for application that draws a histogram
 shinyUI(
@@ -31,7 +31,7 @@ shinyUI(
         dashboardBody(
             tabItems(
                 tabItem(tabName = "dataexp",
-                        fluidRow( h3("2. Data Exploration"),br(), br(),
+                        fluidRow( h2("2. Data Exploration"),br(), br(),
                             column(width = 6,
                                    box(selectInput("var", "Select the Team ID", 
                                                    selected = "ARI",
@@ -63,7 +63,7 @@ shinyUI(
                             column(width = 12,
                                    box("Bar Plot", status = "primary", solidHeader = T,
                                        collapsible = T, plotOutput("bar"))),
-                            box("bar plot for Wins by team id", plotOutput("teambar")),
+                            
                             
                             box("Scatter Plot", plotlyOutput("scat"))
                         )),
@@ -76,17 +76,33 @@ shinyUI(
   #Principal COmponent Analysis
                 
                 tabItem(tabName = "PCA",
-                        fluidRow( h3("3. Principal Component Analysis"), br(), br(),
+                        fluidRow( h2("3. Principal Component Analysis"), br(), br(),
+                            
+                            h4("Principal Componets printed:"),
+                            verbatimTextOutput("pcTable"), br(),
+                            
+                            plotOutput("pcvaris"),
+                            
+                            h4("Plot of Cumulative variability to the scale of 1"),      
+                            plotOutput("pcCum"), br(), br(),
+                            
+                            h3("A look at the biplot of PCs"), br(),
+                            
                             box(selectizeInput("pcompA", "Select PC for x- axis",
                                                selected = "1",
-                                               choices = as.character( c(1: 18) ))),
+                                               choices = as.character( c(1: 16) ))),
                             box(selectizeInput("pcompB", "Select PC for y- axis",
                                                
                                                selected = "2",
-                                               choices = as.character( c(1: 18) ))),
+                                               choices = as.character( c(1: 16) ))),
                             
                             
-                            plotOutput ("pc")
+                           box( plotOutput ("pc") ), br(), br(),
+                            
+                            h3("Looking at the plot, the number of PCs explaing most of the variability be counted
+                               towards the predictors. A thumb rule may be considered as where the bend is most. 
+                               The variables can be selected by looking at very first printed table of PCs which 
+                               has explained the most variability.")
                         )),
                 
                 
@@ -95,21 +111,56 @@ shinyUI(
  #Modeling Page
                 
                 tabItem(tabName = "modelg",
-                        fluidRow( h3("4. Modeling"), br(), br(),
-                            box(column(width = 3,
-                                selectInput("mvar", "Select the Team ID", 
+                        fluidRow( h2("4. Modeling"), br(),
+                                  h4(" Here we will use the data available upto year of 2014. We also
+                                  have the options available to choose team ID and number of trees to
+                                  fit. The model fitted will predict 'W' (Wins) for the year of 2015 AD. Then we will 
+                                     compare the outcome of the prediction by the model fit  for both of the mothods
+                                     i.e. Random Forest and Linear model we used to predict."),
+                                  h4("The variables used for the prediction are : yearID, stint, 
+                                  W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, SO, ERA and R. But will also have option 
+                                                 to select the variables to use in the model from the list presented
+                                     here" ), br(), br(),
+                            box(column(width = 6,
+                                selectInput("Teamtopred", "Select the Team ID", 
                                             selected = "ARI",
-                                            choices = levels(as.factor(mbl_pitching$teamID))),
+                                            choices = unique( mbl_pitching %>% filter(yearID==2015) %>% select(teamID))),
                                 selectInput("ntre", "Number of Trees to fit:", 
                                             selected = "100",
-                                            choices = as.character(c(1:300)))
+                                            choices = as.character(c(1:300))),
+                                selectInput("predv", "Select the predictors",
+                                            selected = "BAL",
+                                            choices = c(" yearID", "stint", "W", "L", "G", "GS", "CG", 
+                                                 "SHO", "SV", "H", "ER", "HR", "BB", "SO", "ERA", "R"), multiple = T)
                                 
                                 
                                 
                             )),
-                           box(column(width = 12,
-                                      plotOutput("mdlfit") ))
                             
+                            h3("Outcome of fitted Random model Predictions:"),
+                            box(verbatimTextOutput ("rfRMSE")),
+                            
+                            h3("Outcome of fitted Linear Model Predictions:"),
+                            box(verbatimTextOutput ("lmRMSE")),
+                            
+                         
+                            box(  h4("Table showing the prediction values for W(Wins) for both the linear model and  random forest fits. 
+                               'W' is the actual wins and W_LM/W_RF are the predicted Wins for linear model and random forest 
+                               model fits respectively."),
+                              dataTableOutput("predtable")),
+                            
+                            h3("Select the method you would like to use"),
+                            box(radioButtons("modeltofit", "Method:", 
+                                             selected= "Linear Model",
+                                               choices=c("Random Forest", "Linear Model"))),
+                            
+                            h3("As the number of wins in the fractions is not intuitive it is rounded to whole number"),
+                            
+                          
+                            
+                            box(downloadButton("downloadPred", "Download"),
+                                dataTableOutput("predtable2")),
+                            box(dataTableOutput("d1_rf"))
                         )),
                 
                 
@@ -120,8 +171,15 @@ shinyUI(
                 #Dataset page
                 
                 tabItem(tabName = "fulldata",
-                       fluidRow( h3("5. Dataset"), br(), br(),
-                        box(downloadButton("downloadData", "Download"), 
+                       fluidRow( h2("5. Dataset"), br(), br(),
+                                 h4("The intention of this page is to allow the user navigate throught the whole
+                                    data set and play around to choose the attributes as per the requirement of
+                                    user. Here you can also subset the data set and downoload as '.csv' file.
+                                    While subsetting the data please remember that not all of the teams were in
+                                    existance throught years of data available. So you may encounter a data table 
+                                    reflecting 0 observations for some of the teamID and yearID selected"), br(),
+                                 
+                        box( 
                             br(),
                             h4("Select options below to subset the data"),
                             br(),
@@ -136,7 +194,9 @@ shinyUI(
                         ),
                         
                         #box(datatable(mbl_pitching)),
-                        box( dataTableOutput("dtset") )
+                        box(downloadButton("downloadData", "Download"),
+                            dataTableOutput("dtset") )
+                        
                 )),
                 
                 
@@ -168,7 +228,7 @@ shinyUI(
                         
                         
                         h3("1. Information About the Data"), br(), 
-                        h3("Data Set Information"),
+                        h2("Data Set Information"),
                         br(),
                         
                         h4(" This data set is donloaded from this", 
@@ -208,14 +268,20 @@ shinyUI(
                         h3("Purpose of the App"),
                         br(), 
                         h4("Our goal here will be to fit the model and predict the 'W' (Wins) for one user picked team for the year of 
-                        2015 and measure the statistics, how accurately can it be measured. We will be using  the Random Forest model and
+                        2015 and measure the statistics, how accurately can it be predicted. We will be using  the Random Forest model and
                            Lenear model to fit the model and predict the wins. Then choose the best one."),
                         
                        
                         
                         h5(" The Multiple Linear Regression Equation: ", br(), "Matrix Form:"), 
-                        withMathJax(),
-                        helpText('y= Xb + E'),
+                      
+            #Mathematical expression
+                       withMathJax(),
+                       helpText(' $${\\textbf{y}}= Xb + E$$ 
+
+ and a fraction $$1-\\frac{1}{2}$$'),
+                       
+                       helpText('$$\\sum$$ x')
            
                                  
                         
