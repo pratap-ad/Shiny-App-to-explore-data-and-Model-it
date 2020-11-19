@@ -120,125 +120,191 @@ shinyServer(function(input, output, session) {
     })
     
     
-    #Principal Component Analysis
-    
-    output$pc<- renderPlot({
+#Principal Component Analysis
+  #PC table
+    output$pcTable<- renderPrint({
+      
+      pc<-  prcomp(dt<- na.omit(select(mbl_pitching, yearID, stint, W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, SO, ERA, R) ), 
+                   center = T, scale= T)
+      pc
+      
+    })
+ 
+    #PC  variances plot
+    output$pcvaris<- renderPlot({
+      
+      pc<-  prcomp(dt<- na.omit(select(mbl_pitching, yearID, stint, W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, SO, ERA, R) ), 
+                   center = T, scale= T)
+      
+      plot((pc$sdev^2/sum(pc$sdev^2)), ylim=c(0,1), type='b', 
+           ylab = "Variances", xlab = "PCs",
+           main = "Plot of varibilty")
+      
+      
+    })
+       
+  #PC cumulative variances plot
+    output$pcCum<- renderPlot({
         
         pc<-  prcomp(dt<- na.omit(select(mbl_pitching, yearID, stint, W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, SO, ERA, R) ), 
                      center = T, scale= T)
-        par(mfrow=c(1,3))
+        
         plot(cumsum (pc$sdev^2/sum(pc$sdev^2)), ylim=c(0,1), type='b', 
-             ylab = "Cummulative variances in reduced scale to 1")
-        biplot(pc, xlabs=rep(".", nrow(dt)), cex=2, 
-               choices = c(as.numeric(input$pcompA) , as.numeric(input$pcompB)),
-               xlab = "Plot for Principal Components")
+             ylab = "Cummulative variances in reduced scale to 1", xlab = "PCs",
+             main = "Plot of cumulative varibilty")
+    
         
     })
     
+  #PCs biplot
+    output$pc<- renderPlot({
+      
+      pc<-  prcomp(dt<- na.omit(select(mbl_pitching, yearID, stint, W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, SO, ERA, R) ), 
+                   center = T, scale= T)
+      
+      plot(cumsum (pc$sdev^2/sum(pc$sdev^2)), ylim=c(0,1), type='b', 
+           ylab = "Cummulative variances", main = "Cummulative variances in reduced scale to 1")
+      biplot(pc, xlabs=rep(".", nrow(dt)), cex=2, 
+             choices = c(as.numeric(input$pcompA) , as.numeric(input$pcompB)),
+             main = "Plot for Principal Components")
+      
+    })
+   
     
     
-    #Modeling
+     
+#Modeling
+   
+    modeldta<- reactive({
+      
+      pv2<-  na.omit( mbl_pitching %>% select( teamID, playerID, yearID, stint, 
+                                        W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, 
+                                        SO, ERA, R)  %>% 
+                        filter(teamID == input$Teamtopred) )
+    })
+    
+
     
     
-    output$mdlfit<- renderPrint({
-        
-        pv2<-  na.omit( mbl_pitching %>% select( teamID, playerID, yearID, stint, W, L, G, GS, CG, 
-                                                 SHO, SV, H, ER, HR, BB, SO, ERA, R) %>% 
-                            filter(teamID == "BAL") )
-        
-        #set seed
-        set.seed(3)
-        #train and test dataset 
-        train<- sample(1:nrow(pv2), size = nrow(pv2)*0.8)
-        test<- dplyr::setdiff(1:nrow(pv2), train)
-        
-        #Fit the regression tree model
-        treeFit<- tree(W~. -teamID -playerID , data=pv2 )
-        # summary(treeFit)
-        # text(treeFit)
-        #plot(treeFit)
-        
-        #cvTree<- cv.tree(treeFit)
-        
-        #plot(cvTree$size, cvTree$dev, type = "b")
-        
-        trainData<- pv2[train,-c(1,2) ]
-        testData<- pv2[test, -c(1,2) ]
-        mod1Fit<- train(W~., data=trainData,
-                        method="rpart",
-                        preProcess= c("center", "scale"),
-                        trControl= trainControl(method = "cv"))
-        
-        
-        
-        #fancyRpartPlot(mod1Fit$finalModel)
-        
-        mod1Fit$bestTune
-        
-        #prediction
-        pred<- predict(mod1Fit, newdata = testData)
-        postResample(pred, testData$W)
-        
-        #linear model fit
-        lmFit<- train(W~., data=trainData,
-                      method= "lm")
-        
-        predlm<- predict(lmFit, newdata= testData)
-        postResample(predlm, testData$W)
-        
-        
-        
-        
-        #Random Forest method
-        rfFit<- randomForest( as.formula (paste(W, "~", paste(name, collapse = "+"))), data=trainData,
-                             mtry=ncol(trainData)/3,
-                             ntree= as.numeric(input$ntre), importance= T)
-        rfPred<- predict(rfFit, newdata= dplyr::select(testData, -W))
-        postResample(rfPred, testData$W)
-        
-        
-        
-        #Tuning Parameters
-        tune1<- 1:5
-        tune2<- letters[1:4]
-        expand.grid(name1= tune1, name2= tune2)
-        
-        
-        #Fit model using data before 2015 and predict wins for 2015
-        #train and test data sets
-        train2015<- pv2 %>% filter(yearID !=2015)
-        test2015<- pv2 %>% filter(yearID ==2015)
-        
-        #random forest method
-        rfFit2015<- randomForest(W~., data=train2015,
-                                 mtry=ncol(train2015)/3,
-                                 ntree=200, importance= T)
-        rfPred2015<- predict(rfFit2015, newdata= dplyr::select(test2015, -W))
-        postResample(rfPred2015, test2015$W)
-        
-        
-        #linear model fit
-        #lmFit2015<- train(W~., data=trainData2015,
-         #             method= "lm")
-        
-        #predlm2015- predict(lmFit2015, newdata= testData2015)
-       # postResample(predlm2015, testData2015$W)
-        
-        
-        fancyRpartPlot(mod1Fit$finalModel)
+    
+    output$rfRMSE<- renderPrint({
+
+      
+      #Fit model using data before 2015 and predict wins for 2015
+      #train and test data sets
+      train2015<- modeldta() %>% filter(yearID !=2015) %>% select(-teamID, -playerID)
+      test2015<- modeldta() %>% filter(yearID ==2015) %>% select(-teamID, -playerID)
+      
+      #random forest method
+      rfFit2015<- randomForest(W~., data=train2015,
+                               mtry=ncol(train2015)/3,
+                               ntree=as.numeric(input$ntre), importance= T)
+      rfPred2015<- predict(rfFit2015, newdata= dplyr::select(test2015, -W))
+      c_rf<- as.data.frame(rfPred2015)
+      postResample(rfPred2015, test2015$W)
+      
+      
+ 
+      postResample(rfPred2015, test2015$W)
+      
+      
+    })
+    
+    output$lmRMSE<- renderPrint({
+      
+      #train and test data sets
+      train2015<- modeldta() %>% filter(yearID !=2015) %>% select(-teamID, -playerID)
+      test2015<- modeldta() %>% filter(yearID ==2015) %>% select(-teamID, -playerID)
+      # linear model fit
+      lmFit2015<- train(W~., data=train2015,
+                        method= "lm")
+      
+      predlm2015<- predict(lmFit2015, newdata= test2015)
+      c_lm<- as.data.frame(predlm2015)
+      postResample(predlm2015, test2015$W)
+      
+      
+      postResample(predlm2015, test2015$W)
     })
     
     
+  #Predicted table
+     predTbl<- reactive({
+   
+     
+       players<- unique(modeldta() %>% filter(yearID==2015 & teamID== input$Teamtopred) %>% select(playerID))
+       #Fit model using data before 2015 and predict wins for 2015
+       #train and test data sets
+       train2015<- modeldta() %>% filter(yearID !=2015) %>% select(-teamID, -playerID)
+       test2015<- modeldta() %>% filter(yearID ==2015) %>% select(-teamID, -playerID)
+       
+       #random forest method
+       rfFit2015<- randomForest(W~., data=train2015,
+                                mtry=ncol(train2015)/3,
+                                ntree=as.numeric(input$ntre), importance= T)
+       rfPred2015<- predict(rfFit2015, newdata= dplyr::select(test2015, -W))
+       
+       c<- as.data.frame(rfPred2015)
+       
+       lmFit2015<- train(W~., data=train2015,
+                         method= "lm")
+       
+       predlm2015<- predict(lmFit2015, newdata= test2015)
+       c_lm<- as.data.frame(predlm2015)
+       
+       winPridict<- data.frame(players, teamID= input$Teamtopred, test2015 %>% 
+                                 filter(yearID==2015) %>% select(yearID, W), W_RF= round( rfPred2015, 0), 
+                             W_LM=round(predlm2015,0)) 
+
+    })
     
     
-    
-    
-    
-    
-    # Full data table with options to subset attributes
-    
-    
-    
+     output$predtable<- renderDataTable({
+       
+       #if (input$modeltofit == "Linear Method")
+        # return(datatable(predTbl() %>% select(- W_RF) ))
+       datatable(predTbl())
+       
+     })
+     
+     predTbl2<- reactive({
+       if (input$modeltofit == "Random Forest")
+        return( datatable( dt6<- predTbl() %>% select(- W_LM) ))
+       
+       datatable(dt6<- predTbl() %>% select(- W_RF) )
+       
+     })
+     
+     output$predtable2<- renderDataTable({
+       dt7<- predTbl2()
+     
+       dt7
+     })
+     
+     
+     
+# Downloadable csv of selected dataset ----
+     predTbl3<- reactive({
+       if (input$modeltofit == "Random Forest")
+         return(  dt8<- predTbl() %>% select(- W_LM) )
+       
+       dt8<- predTbl() %>% select(- W_RF) 
+       
+     })
+     
+          output$downloadPred <- downloadHandler(
+       filename = function() {
+         paste("WinsPredict", ".csv", sep = "")
+       },
+       content = function(file) {
+         write.csv(as.data.frame( predTbl3() ), file, row.names = FALSE)
+       }
+     )
+     
+     
+     
+
+# Full data table with options to subset attributes
     
     
     # Reactive value for data Table
@@ -297,12 +363,6 @@ shinyServer(function(input, output, session) {
       
       
     })
-    
-    #datasetInput <- reactive({
-    #  switch(input$dataset,
-    #         "Pitching" = dtFull() )
-    #})
-    
   
     
     
