@@ -176,14 +176,15 @@ shinyServer(function(input, output, session) {
      
 #Modeling
    
-    modeldta<- reactive({
-      
-      pv2<-  na.omit( mbl_pitching %>% select( teamID, playerID, yearID, stint, 
+ modeldta<- reactive({
+      if(length(input$predv) == 0 ) return( pv2<-  na.omit( mbl_pitching %>% select( teamID, playerID, yearID, stint, 
                                         W, L, G, GS, CG, SHO, SV, H, ER, HR, BB, 
                                         SO, ERA, R)  %>% 
-                        filter(teamID == input$Teamtopred) )
+                        filter(teamID == input$Teamtopred) ) )
+      if(length(input$predv) != 0 ) return( pv2<-  na.omit( mbl_pitching %>% dplyr:: select(!!!input$predv, teamID, W, playerID, yearID)  %>% 
+                                                              filter(teamID == input$Teamtopred) ) )
+      
     })
-    
 
     
     
