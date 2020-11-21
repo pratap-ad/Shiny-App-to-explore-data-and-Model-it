@@ -143,8 +143,8 @@ shinyUI(
                                             selected = "100",
                                             choices = as.character(c(1:300))),
                                 selectInput("predv", "Select the predictors",
-                                            selected = "BAL",
-                                            choices = c(" yearID", "stint", "W", "L", "G", "GS", "CG", 
+                                            
+                                            choices = c(, "stint", "L", "G", "GS", "CG", 
                                                  "SHO", "SV", "H", "ER", "HR", "BB", "SO", "ERA", "R"), multiple = T)
                                 
                                 
