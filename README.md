@@ -7,7 +7,7 @@
 
 ### Packages needed to install and call the library
 ```{r}
-install.packages("shiny", "shinydashboard", "tidyverse", "dplyr", "ggplot2", "stringr", "caret", "DT", "plotly" )
+install.packages("shiny", "shinydashboard", "tidyverse", "dplyr", "ggplot2", "stringr", "caret", "DT", "plotly", "tree", "rattle", "randomForest" )
 
 
 library(shiny)
@@ -19,6 +19,9 @@ library(stringr)
 library(caret)
 library(DT)
 library(plotly)
+library(tree)
+library(rattle)
+library(randomForest)
 ```
 
 
