@@ -26,6 +26,6 @@ library(randomForest)
 
 
 ### Code to run the repo from **RStudio:**
-```
+
 shiny::runGitHub("Project-III-ST-558-Create-Shiny-App-to-explore-data-and-Model-it", "pratap-ad", ref = "main")
 
