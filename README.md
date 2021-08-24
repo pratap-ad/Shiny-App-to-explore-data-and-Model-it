@@ -10,18 +10,11 @@
 install.packages(c("shiny", "shinydashboard", "tidyverse", "dplyr", "ggplot2", "stringr", "caret", "DT", "plotly", "tree", "rattle", "randomForest" ))
 
 
-library(shiny)
-library(shinydashboard)
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(stringr)
-library(caret)
-library(DT)
-library(plotly)
-library(tree)
-library(rattle)
-library(randomForest)
+packages<- c("shiny", "shinydashboard", "tidyverse", "dplyr", 
+             "ggplot2", "stringr", "caret", "DT", "plotly", 
+             "tree", "rattle", "randomForest" )
+
+lapply(packages, library, character.only= TRUE)
 ```
 
 
